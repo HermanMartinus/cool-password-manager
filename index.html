@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+
+<head>
+  <title>Cool password manager</title>
+  <script src="generator.js"></script>
+  <link rel="stylesheet" href="dark.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <h1>Cool password manager</h1>
+  <fieldset>
+    <legend>Generator</legend>
+    <div style="display:flex">
+      <input type="password" id="seed" placeholder="Master password..." />
+      <p>
+        <input type="checkbox" name="remember" id="show-seed" onchange="ToggleSeed();">
+        <label for="show-seed">Show</label>
+      </p>
+    </div>
+    <input type="text" id="service" placeholder="Service..." />
+    <button onclick="CreatePassword()">Generate</button>
+
+    <textarea readonly id="passphrase" placeholder="Generated passphrase..." class="obscured"></textarea>
+    <div style="display:flex">
+      <button onclick="CopyToClipboard()">Copy to clipboard</button>
+      <p>
+        <input type="checkbox" name="remember" id="show-passphrase" onchange="TogglePassphrase();">
+        <label for="show-passphrase">Show</label>
+      </p>
+    </div>
+
+  </fieldset>
+
+  <h2>How it works</h2>
+  <ol>
+    <li>
+      Type in your master password (and remember it, this is the only password you can never forget).
+    </li>
+    <li>
+      Type in the service name (eg: Facebook) and generate the passphrase.
+    </li>
+    <li>
+      Copy the generated passphrase and set your service's password to this easy to remember phrase.
+    </li>
+    <li>
+      If you don't remember the passphrase for that service in the future, come and regenerate it. It will be the same
+      passphrase every time.
+    </li>
+  </ol>
+  <hr>
+  <p>
+    Passwords are pretty terrible. Passphrases are a much better alternative for many reasons niftily explained by <a
+      href="https://xkcd.com/936/" target="_blank">this XKCD comic</a>.
+    If you're not convinced, here's <a href="https://www.explainxkcd.com/wiki/index.php/936:_Password_Strength"
+      target="_blank">a more in-depth explanation</a>.
+  </p>
+  <p>
+    Cool password manager doesn't store passwords, it generates them on the fly by doing a one-way hash of your super
+    secret master password, combined with the name of the service you're trying to access, then generating a 4 word
+    passphrase from the result.
+  </p>
+  <p>
+    Once you set your service's password to the generated passphrase, whenever the
+    need to login comes, you can regenerate your password.
+  </p>
+  <p>
+    In this way, no passwords are ever stored (in a password manager, or post-it note),
+    and the only password you need to remember is your master passphrase, as
+    it is the seed to generating all of your passwords.
+  </p>
+  <p>
+    Here's how the algorithm works:
+  </p>
+
+  <code>
+    combo = master_password + service_name
+  </code>
+  <p>
+    combo -> 'this is my master password <b>facebook</b>'
+  </p>
+
+  <code>
+    generated_passphrase = wordlist.filter(hash(combo))
+  </code>
+  <p>
+    generated_passphrase -> 'churn about crucial indicate'
+  </p>
+
+  <p>
+    For those interested, the wordlist is has 2048 words, resulting in a password with 44 bits of entropy.
+  </p>
+
+  <script>
+    function CreatePassword() {
+      const seed = document.querySelector('#seed').value;
+      const service = document.querySelector('#service').value;
+      document.querySelector('#passphrase').value = Generate(seed, service)
+    }
+
+    function ToggleSeed() {
+      const seedInput = document.querySelector('#seed');
+      seedInput.type = seedInput.type == "password" ? "text" : "password";
+    }
+
+    function TogglePassphrase() {
+      const passPhraseElement = document.getElementById('passphrase');
+      if (passPhraseElement.classList.contains('obscured')) {
+        passPhraseElement.classList.remove('obscured');
+      } else {
+        passPhraseElement.classList.add('obscured');
+      }
+    }
+
+    function CopyToClipboard() {
+      const passPhraseElement = document.getElementById('passphrase');
+      passPhraseElement.classList.remove('obscured');
+      document.execCommand('copy', false, passPhraseElement.select());
+      passPhraseElement.classList.add('obscured');
+    }
+  </script>
+</body>
